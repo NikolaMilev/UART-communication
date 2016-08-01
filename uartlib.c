@@ -44,9 +44,9 @@ int open_conf_UART_()
 		close(uart_filestream);
 		return -1;
 	}
-	
-	options.c_cflag = BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;		//See flags above
-	options.c_iflag = IGNPAR;
+
+	options.c_cflag = CRTSCTS | BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;		//See flags above
+	options.c_iflag = 0;
 	options.c_oflag = 0;
 	options.c_lflag = 0;
 
