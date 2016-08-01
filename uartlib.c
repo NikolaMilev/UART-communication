@@ -107,8 +107,10 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 		return -2;
 	}
 
+	// A quick fix, no idea for now how to replace it.
+	// Fixes the problem of not getting all the data.
+	usleep(500);
 
-	
 	// Read up to MAX_SIZE_ - 1 characters from the port if they are there
 	// If the zero byte is a valid signal, remove the -1 and remove the terminating null
 	buffer_length = read(uart_filestream, (void*)(*dest), max_len);
