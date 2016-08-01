@@ -46,7 +46,10 @@ int open_conf_UART_()
 	}
 
 	options.c_cflag = BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;		//See flags above
+
 	options.c_iflag = 0;
+	options.c_iflag |= (IXON | IXOFF | IXANY);
+	
 	options.c_oflag = 0;
 	options.c_lflag = 0;
 
@@ -108,7 +111,7 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 	}
 
 
-	printf("\nAvailable bytes: %d\n", available_bytes_UART_(uart_filestream));
+	
 	// Read up to MAX_SIZE_ - 1 characters from the port if they are there
 	// If the zero byte is a valid signal, remove the -1 and remove the terminating null
 	buffer_length = read(uart_filestream, (void*)(*dest), max_len);
