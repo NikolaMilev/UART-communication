@@ -45,14 +45,14 @@ int open_conf_UART_()
 		return -1;
 	}
 
-	         termAttr.c_cflag &= ~PARENB;
-         termAttr.c_cflag &= ~CSTOPB;
-         termAttr.c_cflag &= ~CSIZE;
-         termAttr.c_cflag |= CS8;
-         termAttr.c_cflag |= (CLOCAL | CREAD);
-         termAttr.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-         termAttr.c_iflag &= ~(IXON | IXOFF | IXANY);
-         termAttr.c_oflag &= ~OPOST;
+	     options.c_cflag &= ~PARENB;
+         options.c_cflag &= ~CSTOPB;
+         options.c_cflag &= ~CSIZE;
+         options.c_cflag |= CS8;
+         options.c_cflag |= (CLOCAL | CREAD);
+         options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+         options.c_iflag &= ~(IXON | IXOFF | IXANY);
+         options.c_oflag &= ~OPOST;
 
 	// Flushing the file stream (the input area)
 	indicator = tcflush(uart_filestream, TCIFLUSH);
