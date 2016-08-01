@@ -1,5 +1,5 @@
 #include "uartlib.h"
-#include <stdio.h>
+#include <unistd.h>
 
 unsigned int BAUD_ = B115200 ;
 unsigned int NUM_BITS_ = CS8 ;
@@ -48,7 +48,7 @@ int open_conf_UART_()
 	options.c_cflag = CRTSCTS | BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;		//See flags above
 	options.c_iflag = 0;
 	options.c_oflag = 0;
-	options.c_lflag = 0;
+	options.c_lflag = ICANON;
 
 	// Flushing the file stream (the input area)
 	indicator = tcflush(uart_filestream, TCIFLUSH);
@@ -94,6 +94,7 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 		return -1;
 	}
 
+	usleep(500000);
 	// select waits for the uart_filestream to be ready for reading
 	indicator = select(uart_filestream + 1, &set, NULL, NULL, &timeout);
 	if(indicator == -1)
