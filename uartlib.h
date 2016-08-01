@@ -10,13 +10,12 @@
 #include <sys/stat.h>	
 #include <fcntl.h>
 #include <sys/select.h>	//
-
-#define MAX_PATH_LEN_ 30
+#include <sys/ioctl.h>
 
 //Some values used by default, left for the user to change if needed
 unsigned int BAUD_ ;
 unsigned int NUM_BITS_  ;
-char UART_PATH_[MAX_PATH_LEN_] ;
+char *UART_PATH_ ;
 unsigned int MAX_SIZE_ ;
 unsigned int OPEN_FLAG_ ;
 time_t TIMEOUT_SEC_ ;
@@ -31,6 +30,8 @@ suseconds_t TIMEOUT_USEC_ ;
  */ 
 int open_conf_UART_() ;
 
+
+int available_bytes_UART_(int uart_filestream) ;
 
 /*
  * Reads a maximum of max_len bytes from the UART port whose file descriptor is uart_filestream into the dest buffer.

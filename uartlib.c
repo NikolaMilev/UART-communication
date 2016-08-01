@@ -1,8 +1,9 @@
 #include "uartlib.h"
+#include <stdio.h>
 
 unsigned int BAUD_ = B115200 ;
 unsigned int NUM_BITS_ = CS8 ;
-char UART_PATH_[MAX_PATH_LEN_] = "/dev/ttyAMA0" ;
+char *UART_PATH_ = "/dev/ttyAMA0" ;
 unsigned int MAX_SIZE_ = 128 ;
 unsigned int OPEN_FLAG_ = O_RDWR ;
 time_t TIMEOUT_SEC_ = 5 ;
@@ -86,6 +87,13 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 	timeout.tv_sec = TIMEOUT_SEC_;
 	timeout.tv_usec = TIMEOUT_USEC_;
 
+	indicator = tcflush(uart_filestream, TCIFLUSH);
+	if(indicator < 0)
+	{	
+		// Unable to flush
+		return -1;
+	}
+
 	// select waits for the uart_filestream to be ready for reading
 	indicator = select(uart_filestream + 1, &set, NULL, NULL, &timeout);
 	if(indicator == -1)
@@ -99,6 +107,8 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 		return -2;
 	}
 
+
+	printf("\nAvailable bytes: %d\n", available_bytes_UART_(uart_filestream));
 	// Read up to MAX_SIZE_ - 1 characters from the port if they are there
 	// If the zero byte is a valid signal, remove the -1 and remove the terminating null
 	buffer_length = read(uart_filestream, (void*)(*dest), max_len);
@@ -131,6 +141,13 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	timeout.tv_sec = TIMEOUT_SEC_;
 	timeout.tv_usec = TIMEOUT_USEC_;
 
+	indicator = tcflush(uart_filestream, TCOFLUSH);
+	if(indicator < 0)
+	{	
+		// Unable to flush
+		return -1;
+	}
+
 	// select waits for the uart_filestream to be ready for reading
 	sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);
 	if(sel_ind == -1)
@@ -157,4 +174,17 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 		return indicator;
 	}	
 	// Both branches of the if statement above have return, so this will not be reached
+}
+
+
+int available_bytes_UART_(int uart_filestream)
+{
+	int availableBytes, indicator;
+	indicator = ioctl(uart_filestream, FIONREAD, &availableBytes);
+	if(indicator < 0)
+	{
+		return -1;
+	}
+
+	return availableBytes;
 }
