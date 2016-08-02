@@ -76,6 +76,8 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 	//Variable section
 	int indicator;
 	int buffer_length;
+	unsigned int counter;
+	char one_byte;
 	fd_set set;
 	struct timeval timeout;
 	////
@@ -107,22 +109,25 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 		return -2;
 	}
 
-	// A quick fix, no idea for now how to replace it.
-	// Fixes the problem of not getting all the data.
-	usleep(500);
 
-	// Read up to MAX_SIZE_ - 1 characters from the port if they are there
-	// If the zero byte is a valid signal, remove the -1 and remove the terminating null
-	buffer_length = read(uart_filestream, (void*)(*dest), max_len);
+	// Read up to max_len characters from the port if they are there
+	counter = 0;
+	while((indicator = read(uart_filestream, (void*)&one_byte, 1)) > 0)
+	{
+		(*dest)[counter] = one_byte;
+		counter++;
+	}
+
+	buffer_length = counter;
 	
-	if (buffer_length < 0)
+	if (buffer_length == 0 && indicator < 0)
 	{
 		// An error occured while reading
 		return -1;
 	}
 	else
 	{
-		// Returning
+		// Returning number of read bytes
 		return buffer_length;
 	}	
 	// Both branches of the if statement above have return, so this will not be reached
