@@ -1,5 +1,4 @@
 #include "uartlib.h"
-#include <stdio.h>
 
 unsigned int BAUD_ = B115200 ;
 unsigned int NUM_BITS_ = CS8 ;
@@ -125,8 +124,8 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 			break;
 		}
 
-		WAIT_CONSTANT_.tv_usec = timeout.tv_usec;
-		WAIT_CONSTANT_.tv_sec = timeout.tv_sec;
+		timeout.tv_usec = WAIT_CONSTANT_.tv_usec;
+		timeout.tv_sec = WAIT_CONSTANT_.tv_sec;
 		indicator = select(uart_filestream + 1, &set, NULL, NULL, &timeout);
 		if(indicator < 0)
 		{
@@ -236,7 +235,7 @@ struct timeval time_for_one_byte_()
 	ret_val.tv_usec = (long unsigned int)(((long unsigned int)time_for_one_byte % 1000000)*WAIT_PROLONGATION_CONSTANT_);
 	ret_val.tv_sec = (long unsigned int)((time_for_one_byte - ret_val.tv_usec) / 1000000);
 
-	printf("SEC: %lu | USEC: %lu\n", ret_val.tv_sec, ret_val.tv_usec);
+	//printf("SEC: %lu | USEC: %lu\n", ret_val.tv_sec, ret_val.tv_usec);
 
 	return ret_val;
 }

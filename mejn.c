@@ -12,6 +12,10 @@ int main(int argc, char **argv)
 
 	time_for_one_byte_();
 
+	struct timeval tval_before, tval_after, tval_result;
+
+ 	gettimeofday(&tval_before, NULL);
+
 	c = (char*) malloc(MAX_SIZE_) ;
 	if(c == NULL)
 	{
