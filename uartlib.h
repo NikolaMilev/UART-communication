@@ -12,6 +12,9 @@
 #include <sys/select.h>	//
 #include <sys/ioctl.h>
 
+#define BITS_PER_PACKAGE_ 11
+#define WAIT_PROLONGATION_CONSTANT_ 1.1f
+
 //Some values used by default, left for the user to change if needed
 unsigned int BAUD_ ;
 unsigned int NUM_BITS_  ;
@@ -20,6 +23,7 @@ unsigned int MAX_SIZE_ ;
 unsigned int OPEN_FLAG_ ;
 time_t TIMEOUT_SEC_ ;
 suseconds_t TIMEOUT_USEC_ ;
+struct timeval WAIT_CONSTANT_ ;
 
 /*
  * Opens, configures and then returns the file descriptor of the newly opened UART filestream. 
@@ -31,6 +35,7 @@ suseconds_t TIMEOUT_USEC_ ;
 int open_conf_UART_() ;
 
 
+struct timeval time_for_one_byte_() ;
 int available_bytes_UART_(int uart_filestream) ;
 
 /*

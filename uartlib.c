@@ -9,15 +9,17 @@ unsigned int OPEN_FLAG_ = O_RDWR ;
 time_t TIMEOUT_SEC_ = 5 ;
 suseconds_t TIMEOUT_USEC_ = 0 ;
 
+
 int open_conf_UART_()
 {
 	int indicator;
 	int uart_filestream ;
 	struct termios options ;
+	WAIT_CONSTANT_ = time_for_one_byte_();
 
 	// Opening the port in a read/write mode
 	// O_NOCTTY - Nice explanation given here: http://stackoverflow.com/questions/12079059/why-prevent-a-file-from-opening-as-controlling-terminal-with-o-noctty
-	uart_filestream = open(UART_PATH_, OPEN_FLAG_ | O_NOCTTY );
+	uart_filestream = open(UART_PATH_, OPEN_FLAG_ | O_NOCTTY | O_NONBLOCK);
 	if (uart_filestream < 0)
 	{
 		// Unable to open the serial port, so produce an error and halt
@@ -112,10 +114,24 @@ int read_UART_(int uart_filestream, char** dest, int max_len)
 
 	// Read up to max_len characters from the port if they are there
 	counter = 0;
-	while((indicator = read(uart_filestream, (void*)&one_byte, 1)) > 0)
+	while(1)
 	{
+		indicator = read(uart_filestream, (void*)&one_byte, 1);
 		(*dest)[counter] = one_byte;
 		counter++;
+
+		if(indicator < 0)
+		{
+			break;
+		}
+
+		WAIT_CONSTANT_.tv_usec = timeout.tv_usec;
+		WAIT_CONSTANT_.tv_sec = timeout.tv_sec;
+		indicator = select(uart_filestream + 1, &set, NULL, NULL, &timeout);
+		if(indicator < 0)
+		{
+			break;
+		}
 	}
 
 	buffer_length = counter;
@@ -195,3 +211,34 @@ int available_bytes_UART_(int uart_filestream)
 
 	return availableBytes;
 }
+
+struct timeval time_for_one_byte_()
+{
+	int baud;
+	long double time_for_one_byte;
+	struct timeval ret_val;
+	switch (BAUD_) 
+	{
+		case B115200 : baud = 115200; break; 
+		case B57600 : baud = 57600; break;
+		case B38400 : baud = 38400; break;
+		case B19200 : baud = 19200; break;
+		case B9600 : baud = 9600; break;
+		case B4800 : baud = 4800; break;
+		case B2400 : baud = 2400; break;
+		case B1200 : baud = 1200; break;
+		default : -1;
+	}
+
+	time_for_one_byte = (((long double)BITS_PER_PACKAGE_)/(long double)baud) * 1000000  ;
+
+	//number of microseconds in a second
+	ret_val.tv_usec = (long unsigned int)(((long unsigned int)time_for_one_byte % 1000000)*WAIT_PROLONGATION_CONSTANT_);
+	ret_val.tv_sec = (long unsigned int)((time_for_one_byte - ret_val.tv_usec) / 1000000);
+
+	printf("SEC: %lu | USEC: %lu\n", ret_val.tv_sec, ret_val.tv_usec);
+
+	return ret_val;
+}
+
+
