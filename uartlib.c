@@ -3,7 +3,7 @@
 
 //Time and print were used for measuring the time between the initial response and the end of the message,
 //approximating the time needed to receive a message
-#include <stdio.h>
+//#include <stdio.h>
 //#include <sys/time.h>
 
 unsigned int BAUD_ = B38400 ;
@@ -119,7 +119,6 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	{
 		//There's been a select that didn't time out before this read
 		indicator = read(uart_filestream, (void*)tmp_dest, max_len - buffer_length);
-		printf("Read %d bytes\n", indicator);
 		if(indicator < 0)
 		{
 			//If the call was interrupted, try again
