@@ -37,7 +37,7 @@ suseconds_t TIMEOUT_BYTE_ ;
  * Returns : A file descriptor for the newly opened filestream, -1 otherwise. Any errno that is set 
  * by the above functions is unaltered.
  */
-int open_conf_UART_() ;
+int open_conf_UART_(void) ;
 
 /*
  * Reads a maximum of max_len bytes from the UART port whose file descriptor is uart_filestream into the dest buffer.
