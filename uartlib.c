@@ -28,6 +28,15 @@ int open_conf_UART_()
 	}
 
 	// Configuring the options for UART
+
+	// Flushing the file stream (the input and the output area)
+	indicator = tcflush(uart_filestream, TCIOFLUSH);
+	if(indicator < 0)
+	{	
+		// Unable to flush
+		close(uart_filestream);
+		return -1;
+	}
 	
 	// Retrieve the options and modify them. 
 	indicator = tcgetattr(uart_filestream, &options);
@@ -39,23 +48,19 @@ int open_conf_UART_()
 	}
 
 	//Setting the options
-	options.c_cflag = CRTSCTS | BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
-	options.c_iflag = 0;
-	options.c_oflag = 0;
-	options.c_lflag = 0;
+	options.c_cflag |= BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
+	options.c_cflag &= ~(HUPCL | CSTOPB | PARENB);
+
+	options.c_iflag &= ~(INPCK | ISTRIP | IGNBRK | BRKINT | IGNCR | ICRNL | INLCR | IXOFF | IXON | IXANY | IMAXBEL);
+	options.c_oflag &= ~(OPOST | ONLCR);
+	
+	options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP | NOKERNINFO | PENDING);
 
 	//I want the uart to wait 1/10 of a second between bytes at most
 	options.c_cc[VTIME] = 10;
 	options.c_cc[VMIN] = 0;
 
-	// Flushing the file stream (the input and the output area)
-	// indicator = tcflush(uart_filestream, TCIOFLUSH);
-	// if(indicator < 0)
-	// {	
-	// 	// Unable to flush
-	// 	close(uart_filestream);
-	// 	return -1;
-	// }
+
 
 	// Setting the options for the file stream. 
 	indicator = tcsetattr(uart_filestream, TCSANOW, &options);
