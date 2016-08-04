@@ -52,7 +52,7 @@ int open_conf_UART_()
 	options.c_cflag &= ~(HUPCL | CSTOPB | PARENB);
 
 	options.c_iflag &= ~(INPCK | ISTRIP | IGNBRK | BRKINT | IGNCR | ICRNL | INLCR | IXOFF | IXON | IXANY | IMAXBEL);
-	options.c_oflag &= ~(OPOST | ONLCR);
+	options.c_oflag &= ~(OPOST | ONLCR | OLCUC | OCRNL | ONOCR | ONLRET | OFILL | FFDLY);
 	
 	options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP);
 
