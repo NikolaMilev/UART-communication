@@ -11,10 +11,7 @@ int main(int argc, char **argv)
 	int read_num, filedes, written_num;
 	char *ch = "long message1long message2long message3long message4long message5long message6long message7long message8long message9long message10";
 
-
 	struct timeval tval_before, tval_result;
-
- 	gettimeofday(&tval_before, NULL);
 
 	c = (char*) malloc(MAX_SIZE_) ;
 	if(c == NULL)
@@ -62,7 +59,7 @@ int main(int argc, char **argv)
 	read_num = read_UART_(filedes, c, MAX_SIZE_-1);
 	gettimeofday(&tval_result, NULL);
 
-	printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
+	//printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
 	if(read_num < 0)
 	{
 		printf("An unsuccessful read!\n");

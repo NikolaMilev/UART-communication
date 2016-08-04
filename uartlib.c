@@ -1,6 +1,9 @@
 #include <errno.h>
 #include "uartlib.h"
 
+#include <stdio.h>
+#include <sys/time.h>
+
 unsigned int BAUD_ = B38400 ;
 unsigned int NUM_BITS_ = CS8 ;
 char *UART_PATH_ = "/dev/ttyAMA0" ;
@@ -82,6 +85,8 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	fd_set set;
 	struct timeval timeout, init_timeout;
 
+	struct timeval tval_before, tval_result;
+
 	// indicator = tcflush(uart_filestream, TCIFLUSH);
 	// if(indicator < 0)
 	// {	
@@ -107,7 +112,8 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	{	//Timeout
 		return -2;
 	}
-
+	gettimeofday(&tval_before, NULL);
+	
 	buffer_length = 0 ;
 	tmp_dest = dest ;
 	while(buffer_length < max_len)
@@ -137,10 +143,14 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 
 		if(indicator < 0)
 		{
-			return 1;
+			return -1;
 		}
 		else if(indicator == 0)
 		{
+
+			gettimeofday(&tval_result, NULL);
+
+			printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
 			return buffer_length;
 		}
 
