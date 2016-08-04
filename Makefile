@@ -15,4 +15,4 @@ $(PROGRAM): $(OBJ_FILES)
 PHONY: .clean
 
 clean:
-	rm -f *.o $(PROGRAM)
+	rm -f *.o *.h.gch $(PROGRAM) 
