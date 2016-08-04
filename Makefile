@@ -1,3 +1,6 @@
+#Assumes that every .c file in the directory is to be compiled into one program
+#left it as general as possible
+
 PROGRAM = uart_echo
 CPP_FILES = $(wildcard *.c)
 OBJ_FILES = $(notdir $(CPP_FILES:.c=.o))

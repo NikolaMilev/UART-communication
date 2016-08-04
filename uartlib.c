@@ -1,23 +1,25 @@
 #include <errno.h>
 #include "uartlib.h"
 
+//Time and print were used for measuring the time between the initial response and the end of the message,
+//approximating the time needed to receive a message
 #include <stdio.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 
 unsigned int BAUD_ = B38400 ;
 unsigned int NUM_BITS_ = CS8 ;
 char *UART_PATH_ = "/dev/ttyAMA0" ;
-unsigned int MAX_SIZE_ = 256 ;
 unsigned int OPEN_FLAG_ = O_RDWR ;
-time_t TIMEOUT_SEC_ = 5 ;
+time_t TIMEOUT_SEC_ = 2 ;
 suseconds_t TIMEOUT_USEC_ = 0 ;
 
-//This needs to be finely tuned
+// This needs to be finely tuned
 suseconds_t TIMEOUT_BYTE_ = 5000;
 
 
 int open_conf_UART_()
 {
+	// Variable section
 	int indicator;
 	int uart_filestream ;
 	struct termios options ;
@@ -50,7 +52,7 @@ int open_conf_UART_()
 		return -1;
 	}
 
-	//Setting the options
+	// Setting the options; still going to see if I am to keep this or the next two lines below the comments
 	// options.c_cflag |= BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
 	// options.c_cflag &= ~(HUPCL | CSTOPB | PARENB);
 
@@ -80,54 +82,53 @@ int open_conf_UART_()
 
 int read_UART_(int uart_filestream, char* dest, int max_len)
 {
+	// Variable section
 	int indicator;
 	int buffer_length;
 	char *tmp_dest;
-
 	fd_set set;
 	struct timeval timeout, init_timeout;
 
-	struct timeval tval_before, tval_result;
+	// struct timeval tval_before, tval_result;
 
-	// indicator = tcflush(uart_filestream, TCIFLUSH);
-	// if(indicator < 0)
-	// {	
-	// 	// Unable to flush
-	// 	return -1;
-	// }
-
+	// Reseting the set and inserting the uart_filestream in it
 	FD_ZERO(&set);
 	FD_SET(uart_filestream, &set);
 
-	timeout.tv_sec = 0;
-	timeout.tv_usec = TIMEOUT_BYTE_;
-
+	// Setting the time for initial contact
 	init_timeout.tv_sec = TIMEOUT_SEC_ ;
 	init_timeout.tv_usec = TIMEOUT_USEC_ ;
 
+	// Waiting for the first contact. If this times out, we assume no contact.
 	indicator = select(uart_filestream + 1, &set, NULL, NULL, &init_timeout);
 	if(indicator < 0)
 	{
 		return -1;
 	}
 	else if(indicator == 0)
-	{	//Timeout
+	{	// Timeout has occurred
 		return -2;
 	}
-	gettimeofday(&tval_before, NULL);
+	//gettimeofday(&tval_before, NULL);
 	
+	// This section means that there is something to be read in the file descriptor
 	buffer_length = 0 ;
 	tmp_dest = dest ;
+	// Maybe change the way this works (not read directly into the buffer)
 	while(buffer_length < max_len)
 	{
+		//There's been a select that didn't time out before this read
 		indicator = read(uart_filestream, (void*)tmp_dest, max_len - buffer_length);
+		printf("Read %d bytes\n", indicator);
 		if(indicator < 0)
 		{
-			if(errno == EAGAIN || errno == EINTR)
+			//If the call was interrupted, try again
+			if(errno == EINTR)
 			{
 				continue;
 			}
 
+			//If it was any other condition, the read is corrupt. Here we might return
 			return -1;
 		}
 		else if(indicator == 0)
@@ -135,32 +136,37 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			break;
 		}
 
+
 		buffer_length += indicator ;
 		tmp_dest += indicator;
 
-		FD_ZERO(&set);
-		FD_SET(uart_filestream, &set);
+		// FD_ZERO(&set);
+		// FD_SET(uart_filestream, &set);
+
+		// select changes the timeval structure so it is reset here
+		timeout.tv_sec = 0;
+		timeout.tv_usec = TIMEOUT_BYTE_;
 
 		indicator = select(uart_filestream+1, &set, NULL, NULL, &timeout);
 
 		if(indicator < 0)
-		{
+		{	
+			// This indicates an error
 			return -1;
 		}
 		else if(indicator == 0)
 		{
+			// This indicates a timeout; We assume that the transmission is over once first timeout is reached
 
-			gettimeofday(&tval_result, NULL);
+		//	gettimeofday(&tval_result, NULL);
 
-			printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
+		//	printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
 			return buffer_length;
 		}
-
-		timeout.tv_sec = 0;
-		timeout.tv_usec = TIMEOUT_BYTE_;
 	}
-	return buffer_length;
 	// Both branches of the if statement above have return, so this will not be reached
+	// but a warning is generated 
+	return buffer_length;
 }
 
 
@@ -170,23 +176,16 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	int indicator, sel_ind;
 	fd_set set;
 	struct timeval timeout;
-	////
 
 	// Initializing set (for timeout)
 	FD_ZERO(&set);
 	FD_SET(uart_filestream, &set);
 
+	// For writing, same timeout is being used
 	timeout.tv_sec = TIMEOUT_SEC_;
 	timeout.tv_usec = TIMEOUT_USEC_;
 
-	// indicator = tcflush(uart_filestream, TCOFLUSH);
-	// if(indicator < 0)
-	// {	
-	// 	// Unable to flush
-	// 	return -1;
-	// }
-
-	// select waits for the uart_filestream to be ready for reading
+	// select waits for the uart_filestream to be ready for writing
 	sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);
 	if(sel_ind == -1)
 	{
@@ -199,7 +198,7 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 		return -2;
 	}
 
-	//Trying to write to the filestream
+	// Trying to write to the filestream
 	indicator = write(uart_filestream, src, len) ;
 
 	if (indicator < 0)
@@ -210,7 +209,7 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	else
 	{
 		int ret_tmp = indicator;
-		//Waiting for the output buffer to be sent 
+		// Waiting for the output buffer to be sent 
 		indicator = tcdrain(uart_filestream);
 		if(indicator < 0)
 		{
