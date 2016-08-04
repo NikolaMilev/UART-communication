@@ -51,18 +51,20 @@ int open_conf_UART_()
 	}
 
 	//Setting the options
-	options.c_cflag |= BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
-	options.c_cflag &= ~(HUPCL | CSTOPB | PARENB);
+	// options.c_cflag |= BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
+	// options.c_cflag &= ~(HUPCL | CSTOPB | PARENB);
 
-	options.c_iflag &= ~(INPCK | ISTRIP | IGNBRK | BRKINT | IGNCR | ICRNL | INLCR | IXOFF | IXON | IXANY | IMAXBEL);
-	options.c_oflag &= ~(OPOST | ONLCR | OLCUC | OCRNL | ONOCR | ONLRET | OFILL | FFDLY);
+	// options.c_iflag &= ~(INPCK | ISTRIP | IGNBRK | BRKINT | IGNCR | ICRNL | INLCR | IXOFF | IXON | IXANY | IMAXBEL);
+	// options.c_oflag &= ~(OPOST | ONLCR | OLCUC | OCRNL | ONOCR | ONLRET | OFILL | FFDLY);
 	
-	options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP);
+	// options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP);
 
-	//I want the uart to wait 1/10 of a second between bytes at most
-	options.c_cc[VTIME] = 10;
-	options.c_cc[VMIN] = 0;
+	// //I want the uart to wait 1/10 of a second between bytes at most
+	// options.c_cc[VTIME] = 10;
+	// options.c_cc[VMIN] = 0;
 
+	cfmakeraw(&options);
+	options.c_cflag |= BAUD_ | NUM_BITS_ | CREAD;
 
 
 	// Setting the options for the file stream. 

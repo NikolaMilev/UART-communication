@@ -12,9 +12,6 @@
 #include <sys/select.h>	//
 #include <sys/ioctl.h>
 
-#define BITS_PER_PACKAGE_ 11
-#define WAIT_PROLONGATION_CONSTANT_ 1.1f
-
 //Some values used by default, left for the user to change if needed
 unsigned int BAUD_ ;
 unsigned int NUM_BITS_  ;
