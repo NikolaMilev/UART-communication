@@ -38,16 +38,6 @@ int open_conf_UART_()
 		return -1;
 	}
 
-	// I found a question on stackoverlow where the answer said that VTIME and VMIN will be ignored unless I 
-	// switch the FNDELAY flag off
-	// old_fl = fcntl(uart_filestream, F_GETFL);
-	// if(old_fl < 0)
-	// {
-	// 	return -1;
-	// }
-	// old_fl &= ~FNDELAY;
-	// fcntl(uart_filestream, old_fl);
-
 	//Setting the options
 	options.c_cflag = CRTSCTS | BAUD_ | NUM_BITS_ | CLOCAL | CREAD ;
 	options.c_iflag = 0;
@@ -59,14 +49,13 @@ int open_conf_UART_()
 	options.c_cc[VMIN] = 0;
 
 	// Flushing the file stream (the input and the output area)
-	indicator = tcflush(uart_filestream, TCIOFLUSH);
-	if(indicator < 0)
-	{	
-		// Unable to flush
-		close(uart_filestream);
-		return -1;
-	}
-
+	// indicator = tcflush(uart_filestream, TCIOFLUSH);
+	// if(indicator < 0)
+	// {	
+	// 	// Unable to flush
+	// 	close(uart_filestream);
+	// 	return -1;
+	// }
 
 	// Setting the options for the file stream. 
 	indicator = tcsetattr(uart_filestream, TCSANOW, &options);
@@ -88,12 +77,12 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	fd_set set;
 	struct timeval timeout, init_timeout;
 
-	indicator = tcflush(uart_filestream, TCIFLUSH);
-	if(indicator < 0)
-	{	
-		// Unable to flush
-		return -1;
-	}
+	// indicator = tcflush(uart_filestream, TCIFLUSH);
+	// if(indicator < 0)
+	// {	
+	// 	// Unable to flush
+	// 	return -1;
+	// }
 
 	FD_ZERO(&set);
 	FD_SET(uart_filestream, &set);
@@ -113,7 +102,6 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	{	//Timeout
 		return -2;
 	}
-
 
 	buffer_length = 0 ;
 	tmp_dest = dest ;
@@ -174,12 +162,12 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	timeout.tv_sec = TIMEOUT_SEC_;
 	timeout.tv_usec = TIMEOUT_USEC_;
 
-	indicator = tcflush(uart_filestream, TCOFLUSH);
-	if(indicator < 0)
-	{	
-		// Unable to flush
-		return -1;
-	}
+	// indicator = tcflush(uart_filestream, TCOFLUSH);
+	// if(indicator < 0)
+	// {	
+	// 	// Unable to flush
+	// 	return -1;
+	// }
 
 	// select waits for the uart_filestream to be ready for reading
 	sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);

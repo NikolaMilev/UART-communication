@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
 	char *c;
 	int read_num, filedes, written_num;
-	char *ch = "cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!cao, picka!";
+	char *ch = "long message1long message2long message3long message4long message5long message6long message7long message8long message9long message10";
 
 
 	struct timeval tval_before, tval_result;
