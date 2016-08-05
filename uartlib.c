@@ -1,11 +1,6 @@
 #include <errno.h>
 #include "uartlib.h"
 
-//Time and print were used for measuring the time between the initial response and the end of the message,
-//approximating the time needed to receive a message
-//#include <stdio.h>
-//#include <sys/time.h>
-
 unsigned int BAUD_ = B38400 ;
 unsigned int NUM_BITS_ = CS8 ;
 char *UART_PATH_ = "/dev/ttyAMA0" ;
@@ -89,8 +84,7 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	fd_set set;
 	struct timeval timeout, init_timeout;
 
-	// struct timeval tval_before, tval_result;
-
+	// Looping while the select call is interrupted.
 	while(1)
 	{
 		// Reseting the set and inserting the uart_filestream in it
@@ -113,7 +107,8 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			return -1;
 		}
 		else if(indicator == 0)
-		{	// Timeout has occurred
+		{	
+			// Timeout has occurred
 			return -2;
 		}
 		else
@@ -121,7 +116,6 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			break;
 		}
 	}
-	//gettimeofday(&tval_before, NULL);
 	
 	// This section means that there is something to be read in the file descriptor
 	buffer_length = 0 ;
@@ -155,10 +149,6 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 		else if(indicator == 0)
 		{
 			// This indicates a timeout; We assume that the transmission is over once first timeout is reached
-
-		//	gettimeofday(&tval_result, NULL);
-
-		//	printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
 			return buffer_length;
 		}
 
@@ -200,6 +190,7 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	fd_set set;
 	struct timeval timeout;
 
+	// Looping while the select call is interrupted.
 	while(1)
 	{
 		// Initializing set (for timeout)
