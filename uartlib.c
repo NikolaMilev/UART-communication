@@ -221,3 +221,9 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	}	
 	// Both branches of the if statement above have return, so this will not be reached
 }
+
+void flush_buffer_UART_(int uart_filestream)
+{
+	char c;
+	while(read(uart_filestream, &c, 1) > 0);
+}

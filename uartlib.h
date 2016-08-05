@@ -61,4 +61,6 @@ int read_UART_(int uart_filestream, char* dest, int max_len) ;
  */
 int write_UART_(int uart_filestream, char *src, unsigned int len) ;
 
+void flush_buffer_UART_(int uart_filestream) ;
+
 #endif
