@@ -40,10 +40,10 @@ int main(int argc, char **argv)
 	}
 	c[read_num] = '\0';
 	printf("Accepted %d bytes. Arrived message: %s\n", read_num , c);
-	
+
 	printf("----------------------------------------\n");
 	printf("-----------------Writing----------------\n");
-	written_num = write_UART_(filedes, ch, strlen(ch)) ;
+	written_num = write_UART_(filedes, ch, 256)) ;
 
 	if(written_num == -1)
 	{

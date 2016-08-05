@@ -35,7 +35,6 @@ int open_conf_UART_()
 	// Configuring the options for UART
 
 	// Flushing the file stream (the input and the output area)
-	sleep(1);
 	indicator = tcflush(uart_filestream, TCIOFLUSH);
 	if(indicator < 0)
 	{	
