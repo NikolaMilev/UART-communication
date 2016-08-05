@@ -91,23 +91,35 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 
 	// struct timeval tval_before, tval_result;
 
-	// Reseting the set and inserting the uart_filestream in it
-	FD_ZERO(&set);
-	FD_SET(uart_filestream, &set);
-
-	// Setting the time for initial contact
-	init_timeout.tv_sec = TIMEOUT_SEC_ ;
-	init_timeout.tv_usec = TIMEOUT_USEC_ ;
-
-	// Waiting for the first contact. If this times out, we assume no contact.
-	indicator = select(uart_filestream + 1, &set, NULL, NULL, &init_timeout);
-	if(indicator < 0)
+	while(1)
 	{
-		return -1;
-	}
-	else if(indicator == 0)
-	{	// Timeout has occurred
-		return -2;
+		// Reseting the set and inserting the uart_filestream in it
+		FD_ZERO(&set);
+		FD_SET(uart_filestream, &set);
+
+		// Setting the time for initial contact
+		init_timeout.tv_sec = TIMEOUT_SEC_ ;
+		init_timeout.tv_usec = TIMEOUT_USEC_ ;
+
+		// Waiting for the first contact. If this times out, we assume no contact.
+		indicator = select(uart_filestream + 1, &set, NULL, NULL, &init_timeout);
+		if(indicator < 0)
+		{
+			if(errno == EINTR)
+			{
+				// Try again
+				continue;
+			}
+			return -1;
+		}
+		else if(indicator == 0)
+		{	// Timeout has occurred
+			return -2;
+		}
+		else
+		{
+			break;
+		}
 	}
 	//gettimeofday(&tval_before, NULL);
 	
