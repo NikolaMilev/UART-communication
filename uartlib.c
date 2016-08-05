@@ -188,25 +188,38 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 	fd_set set;
 	struct timeval timeout;
 
-	// Initializing set (for timeout)
-	FD_ZERO(&set);
-	FD_SET(uart_filestream, &set);
-
-	// For writing, same timeout is being used
-	timeout.tv_sec = TIMEOUT_SEC_;
-	timeout.tv_usec = TIMEOUT_USEC_;
-
-	// select waits for the uart_filestream to be ready for writing
-	sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);
-	if(sel_ind == -1)
+	while(1)
 	{
-		// select error has occurred
-		return -1;
-	}
-	else if(sel_ind == 0)
-	{
-		// A timeout occurred, returning -2 as an indicator.
-		return -2;
+		// Initializing set (for timeout)
+		FD_ZERO(&set);
+		FD_SET(uart_filestream, &set);
+
+		// For writing, same timeout is being used
+		timeout.tv_sec = TIMEOUT_SEC_;
+		timeout.tv_usec = TIMEOUT_USEC_;
+
+		// select waits for the uart_filestream to be ready for writing
+		sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);
+		if(sel_ind == -1)
+		{
+			if(errno == EINTR)
+			{
+				// If the call was interrupted, try again
+				continue;
+			}
+
+			// select error has occurred
+			return -1;
+		}
+		else if(sel_ind == 0)
+		{
+			// A timeout occurred, returning -2 as an indicator.
+			return -2;
+		}
+		else
+		{
+			break;
+		}
 	}
 
 	// Trying to write to the filestream
