@@ -3,19 +3,15 @@
 #include "uartlib.h"
 #include <sys/time.h>
 
-unsigned int MAX_BUFFER_SIZE_ = 257 ;
+unsigned int MAX_BUFFER_SIZE_ = 256 ;
 
 int main(int argc, char **argv)
 {
 	char *c;
-	int i,read_num, filedes, written_num;
-	char ch[MAX_BUFFER_SIZE_]; 
-	struct timeval tval_before, tval_result;
+	int read_num, filedes, written_num;
+	char *ch = "long message1long message2long message3long message4long message5long message6long message7long message8long message9long message10";
 
-	for(i=0; i<256; i++)
-	{
-		ch[i]=i;
-	}
+	struct timeval tval_before, tval_result;
 
 	c = (char*) malloc(MAX_BUFFER_SIZE_) ;
 	if(c == NULL)
@@ -43,7 +39,7 @@ int main(int argc, char **argv)
 
 	printf("----------------------------------------\n");
 	printf("-----------------Writing----------------\n");
-	written_num = write_UART_(filedes, ch, 256) ;
+	written_num = write_UART_(filedes, ch, strlen(ch)) ;
 
 	if(written_num == -1)
 	{
@@ -71,13 +67,6 @@ int main(int argc, char **argv)
 	}
 	c[read_num] = '\0';
 	printf("Accepted %d bytes. Arrived message: %s\n", read_num , c);
-	for(i=0; i<256; i++)
-	{
-		if(ch[i] != c[i])
-		{
-			printf("ch and c differ on position %d\n", i);
-		}
-	}
 
 
 	return 0;
