@@ -114,42 +114,25 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 	// This section means that there is something to be read in the file descriptor
 	buffer_length = 0 ;
 	tmp_dest = dest ;
-	// Maybe change the way this works (not read directly into the buffer)
+
+	// The first select is redundant but it is easier to loop this way.
 	while(buffer_length < max_len)
 	{
-		//There's been a select that didn't time out before this read
-		indicator = read(uart_filestream, (void*)tmp_dest, max_len - buffer_length);
-		if(indicator < 0)
-		{
-			//If the call was interrupted, try again
-			if(errno == EINTR)
-			{
-				continue;
-			}
-
-			//If it was any other condition, the read is corrupt. Here we might return
-			return -1;
-		}
-		else if(indicator == 0)
-		{
-			break;
-		}
-
-
-		buffer_length += indicator ;
-		tmp_dest += indicator;
-
-		// FD_ZERO(&set);
-		// FD_SET(uart_filestream, &set);
-
 		// select changes the timeval structure so it is reset here
 		timeout.tv_sec = 0;
 		timeout.tv_usec = TIMEOUT_BYTE_;
 
+		//Wait for the file descriptor to be available or for timeout
 		indicator = select(uart_filestream+1, &set, NULL, NULL, &timeout);
 
 		if(indicator < 0)
 		{	
+			if(errno == EINTR)
+			{
+				//Try again
+				continue;
+			}
+
 			// This indicates an error
 			return -1;
 		}
@@ -162,6 +145,31 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 		//	printf("Duration of operation: %lu sec, %lu usec\n", tval_result.tv_sec - tval_before.tv_sec, tval_result.tv_usec - tval_before.tv_usec);
 			return buffer_length;
 		}
+
+		//There's been a select that didn't time out before this read
+		indicator = read(uart_filestream, (void*)tmp_dest, max_len - buffer_length);
+		if(indicator < 0)
+		{
+			if(errno == EINTR)
+			{
+				//If the call was interrupted, try again
+				continue;
+			}
+
+			//If it was any other condition, the read is corrupt.
+			return -1;
+		}
+
+		else if(indicator == 0)
+		{
+			//If, somehow, EOF was reached
+			break;
+		}
+
+
+		buffer_length += indicator ;
+		tmp_dest += indicator; 
+
 	}
 	// Both branches of the if statement above have return, so this will not be reached
 	// but a warning is generated 
