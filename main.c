@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
 	printf("----------------------------------------\n");
 	printf("-----------------Writing----------------\n");
-	written_num = write_UART_(filedes, ch, 256)) ;
+	written_num = write_UART_(filedes, ch, 256) ;
 
 	if(written_num == -1)
 	{
