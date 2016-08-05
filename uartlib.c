@@ -122,14 +122,18 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 		timeout.tv_sec = 0;
 		timeout.tv_usec = TIMEOUT_BYTE_;
 
-		//Wait for the file descriptor to be available or for timeout
+		// Reinitialize the sets for reading
+		FD_ZERO(&set);
+		FD_SET(uart_filestream, &set);
+
+		// Wait for the file descriptor to be available or for timeout
 		indicator = select(uart_filestream+1, &set, NULL, NULL, &timeout);
 
 		if(indicator < 0)
 		{	
 			if(errno == EINTR)
 			{
-				//Try again
+				// Try again
 				continue;
 			}
 
@@ -146,27 +150,27 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			return buffer_length;
 		}
 
-		//There's been a select that didn't time out before this read
+		// There's been a select that didn't time out before this read
 		indicator = read(uart_filestream, (void*)tmp_dest, max_len - buffer_length);
 		if(indicator < 0)
 		{
 			if(errno == EINTR)
 			{
-				//If the call was interrupted, try again
+				// If the call was interrupted, try again
 				continue;
 			}
 
-			//If it was any other condition, the read is corrupt.
+			// If it was any other condition, the read is corrupt.
 			return -1;
 		}
 
 		else if(indicator == 0)
 		{
-			//If, somehow, EOF was reached
+			// If, somehow, EOF was reached
 			break;
 		}
 
-
+		// Change the necessary values
 		buffer_length += indicator ;
 		tmp_dest += indicator; 
 
