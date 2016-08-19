@@ -26,19 +26,19 @@ int main(int argc, char **argv)
 		printf("open_conf_UART_ error");
 		return 1;
 	}
-	flush_buffer_UART_(filedes);
-	printf("------------------Reading-----------------\n");
-	read_num = read_UART_(filedes, c, MAX_BUFFER_SIZE_-1);
+	// flush_buffer_UART_(filedes);
+	// printf("------------------Reading-----------------\n");
+	// read_num = read_UART_(filedes, c, MAX_BUFFER_SIZE_-1);
 	
-	if(read_num < 0)
-	{
-		printf("An unsuccessful read!\n");
-		return 0;
-	}
-	c[read_num] = '\0';
-	printf("Accepted %d bytes. Arrived message: %s\n", read_num , c);
+	// if(read_num < 0)
+	// {
+	// 	printf("An unsuccessful read!\n");
+	// 	return 0;
+	// }
+	// c[read_num] = '\0';
+	// printf("Accepted %d bytes. Arrived message: %s\n", read_num , c);
 
-	printf("----------------------------------------\n");
+	// printf("----------------------------------------\n");
 	printf("-----------------Writing----------------\n");
 	written_num = write_UART_(filedes, ch, strlen(ch)) ;
 
