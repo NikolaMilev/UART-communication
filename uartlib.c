@@ -24,27 +24,29 @@ int open_conf_UART_()
 	if (uart_filestream < 0)
 	{
 		// Unable to open the serial port, so produce an error and halt
-		return -1;
+		return OPEN_FAIL_;
 	}
 
 	// Configuring the options for UART
 
 	// Flushing the file stream (the input and the output area)
+	// I read somewhere (no source to support this) that this call doesn't do
+	// anything if the device doesn't have hardware UART so I made my own flush.
 	indicator = tcflush(uart_filestream, TCIOFLUSH);
 	if(indicator < 0)
-	{	
+	{
 		// Unable to flush
 		close(uart_filestream);
-		return -1;
+		return TERM_STRUCTURE_FAIL_;
 	}
-	
-	// Retrieve the options and modify them. 
+
+	// Retrieve the options and modify them.
 	indicator = tcgetattr(uart_filestream, &options);
 	if(indicator < 0)
-	{	
+	{
 		// Unable to get the attributes
 		close(uart_filestream);
-		return -1;
+		return TERM_STRUCTURE_FAIL_;
 	}
 
 	// Setting the options; still going to see if I am to keep this or the next two lines below the comments
@@ -53,24 +55,24 @@ int open_conf_UART_()
 
 	// options.c_iflag &= ~(INPCK | ISTRIP | IGNBRK | BRKINT | IGNCR | ICRNL | INLCR | IXOFF | IXON | IXANY | IMAXBEL);
 	// options.c_oflag &= ~(OPOST | ONLCR | OLCUC | OCRNL | ONOCR | ONLRET | OFILL | FFDLY);
-	
+
 	// options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN | NOFLSH | TOSTOP);
 
 	// //I want the uart to wait 1/10 of a second between bytes at most
 	// options.c_cc[VTIME] = 10;
 	// options.c_cc[VMIN] = 0;
 
+	// Setting the options
 	cfmakeraw(&options);
 	options.c_cflag |= BAUD_ | NUM_BITS_ | CREAD;
 
-
-	// Setting the options for the file stream. 
+	// Setting the options for the file stream.
 	indicator = tcsetattr(uart_filestream, TCSANOW, &options);
 	if(indicator < 0)
-	{	
+	{
 		// Unable to set the attributes
 		close(uart_filestream);
-		return -1;
+		return TERM_STRUCTURE_FAIL_;
 	}
 	return uart_filestream;
 }
@@ -104,24 +106,24 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 				// Try again
 				continue;
 			}
-			return -1;
+			return IO_FAIL_;
 		}
 		else if(indicator == 0)
-		{	
+		{
 			// Timeout has occurred
-			return -2;
+			return TIMEOUT_;
 		}
 		else
 		{
 			break;
 		}
 	}
-	
+
 	// This section means that there is something to be read in the file descriptor
 	buffer_length = 0 ;
 	tmp_dest = dest ;
 
-	// The first select is redundant but it is easier to loop this way.
+	// The first select in the following loop is redundant but it is easier to loop this way.
 	while(buffer_length < max_len)
 	{
 		// select changes the timeval structure so it is reset here
@@ -136,7 +138,7 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 		indicator = select(uart_filestream+1, &set, NULL, NULL, &timeout);
 
 		if(indicator < 0)
-		{	
+		{
 			if(errno == EINTR)
 			{
 				// Try again
@@ -144,7 +146,7 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			}
 
 			// This indicates an error
-			return -1;
+			return IO_FAIL_;
 		}
 		else if(indicator == 0)
 		{
@@ -163,7 +165,7 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 			}
 
 			// If it was any other condition, the read is corrupt.
-			return -1;
+			return IO_FAIL_;
 		}
 
 		else if(indicator == 0)
@@ -174,21 +176,21 @@ int read_UART_(int uart_filestream, char* dest, int max_len)
 
 		// Change the necessary values
 		buffer_length += indicator ;
-		tmp_dest += indicator; 
+		tmp_dest += indicator;
 
 	}
 	// Both branches of the if statement above have return, so this will not be reached
-	// but a warning is generated 
+	// but a warning is generated
 	return buffer_length;
 }
 
-
 int write_UART_(int uart_filestream, char *src, unsigned int len)
 {
-	//Variable section
 	int indicator, sel_ind;
 	fd_set set;
 	struct timeval timeout;
+	int written = 0;
+	char* tmp_dest = src;
 
 	// Looping while the select call is interrupted.
 	while(1)
@@ -203,6 +205,7 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 
 		// select waits for the uart_filestream to be ready for writing
 		sel_ind = select(uart_filestream + 1, NULL, &set, NULL, &timeout);
+		// If something went wrong
 		if(sel_ind == -1)
 		{
 			if(errno == EINTR)
@@ -212,46 +215,63 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 			}
 
 			// select error has occurred
-			return -1;
+			return IO_FAIL_;
 		}
 		else if(sel_ind == 0)
 		{
 			// A timeout occurred, returning -2 as an indicator.
-			return -2;
+			return TIMEOUT_;
 		}
 		else
 		{
+			// select() call has successfully returned
 			break;
 		}
 	}
 
-	// Trying to write to the filestream
-	indicator = write(uart_filestream, src, len) ;
-
-	if (indicator < 0)
+	// We repeat writing until we've written all that was sent or are unable to write more
+	while(written < len)
 	{
-		// An error occured while writing
-		return -1;
-	}
-	else
-	{
-		int ret_tmp = indicator;
-		// Waiting for the output buffer to be sent 
-		indicator = tcdrain(uart_filestream);
-		if(indicator < 0)
+		indicator = write(uart_filestream, tmp_dest, len) ;
+		// If write() call was interrupted by a signal, we will try again
+		if (indicator < 0)
 		{
+			if(errno == EINTR)
+			{
+				continue;
+			}
+			// Otherwise, it's an error
 			return -1;
+		}
+		// There's no more to write
+		else if(indicator == 0)
+		{
+			return written;
 		}
 		else
 		{
-			return ret_tmp;
+			// Update the progress variables and wair for the data to be sent
+			tmp_dest += indicator;
+			written += indicator;
+			// Waiting for the output buffer to be sent
+			indicator = tcdrain(uart_filestream);
+			if(indicator < 0)
+			{
+				return TERM_STRUCTURE_FAIL_;
+			}
+			else
+			{
+				continue;
+			}
 		}
-	}	
-	// Both branches of the if statement above have return, so this will not be reached
+	}
+
+	return written ;
 }
 
 void flush_buffer_UART_(int uart_filestream)
 {
 	char c;
+	// Read while there's something to be read and discard the read data
 	while(read(uart_filestream, &c, 1) > 0);
 }

@@ -1,18 +1,16 @@
 #Assumes that every .c file in the directory is to be compiled into one program
 #left it as general as possible
 
-PROGRAM = uart_echo
-CPP_FILES = $(wildcard *.c)
-OBJ_FILES = $(notdir $(CPP_FILES:.c=.o))
+PROGRAM = uart_echo_1
+CC_FILES = $(wildcard *.c)
 CC_FLAGS = -Wall
 
-$(PROGRAM): $(OBJ_FILES)
-	gcc $(LD_FLAGS) -o $@ $^
+all: $(PROGRAM)
 
-%.o: %.c
-	gcc $(CC_FLAGS) -c -o $@ $<
+$(PROGRAM): $(CC_FILES)
+	$(CC) $(CC_FLAGS) -o $@ $^
 
 PHONY: .clean
 
 clean:
-	rm -f *.o *.h.gch $(PROGRAM) 
+	rm -f *.o *.h.gch $(PROGRAM)
