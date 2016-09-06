@@ -3,9 +3,9 @@
 
 unsigned int BAUD_ = B38400 ;
 unsigned int NUM_BITS_ = CS8 ;
-char *UART_PATH_ = "/dev/ttyAMA0" ;
+char *UART_PATH_ = "/dev/ttyAMA0" ; // for Dragino, it's /dev/ttyATH0
 unsigned int OPEN_FLAG_ = O_RDWR ;
-time_t TIMEOUT_SEC_ = 2 ;
+time_t TIMEOUT_SEC_ = 1 ;
 suseconds_t TIMEOUT_USEC_ = 0 ;
 
 // This needs to be finely tuned
@@ -29,16 +29,6 @@ int open_conf_UART_()
 
 	// Configuring the options for UART
 
-	// Flushing the file stream (the input and the output area)
-	// I read somewhere (no source to support this) that this call doesn't do
-	// anything if the device doesn't have hardware UART so I made my own flush.
-	indicator = tcflush(uart_filestream, TCIOFLUSH);
-	if(indicator < 0)
-	{
-		// Unable to flush
-		close(uart_filestream);
-		return TERM_STRUCTURE_FAIL_;
-	}
 
 	// Retrieve the options and modify them.
 	indicator = tcgetattr(uart_filestream, &options);
@@ -74,6 +64,18 @@ int open_conf_UART_()
 		close(uart_filestream);
 		return TERM_STRUCTURE_FAIL_;
 	}
+
+	// Flushing the file stream (the input and the output area)
+	// I read somewhere (no source to support this) that this call doesn't do
+	// anything if the device doesn't have hardware UART so I made my own flush.
+	indicator = tcflush(uart_filestream, TCIOFLUSH);
+	if(indicator < 0)
+	{
+		// Unable to flush
+		close(uart_filestream);
+		return TERM_STRUCTURE_FAIL_;
+	}
+
 	return uart_filestream;
 }
 
@@ -272,6 +274,6 @@ int write_UART_(int uart_filestream, char *src, unsigned int len)
 void flush_buffer_UART_(int uart_filestream)
 {
 	char c;
-	// Read while there's something to be read and discard the read data
+	// Reading while there's something to read and discarding the read data
 	while(read(uart_filestream, &c, 1) > 0);
 }
